@@ -1,0 +1,2 @@
+solace:\
+com.solace.spring_cloud_stream.binder.SolaceBinderConfiguration
