@@ -1,4 +1,4 @@
-package com.solace.spring_cloud_stream.binder;
+package com.solace.spring_cloud_stream.binder.properties;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -12,7 +12,7 @@ import org.springframework.cloud.stream.binder.ExtendedBindingProperties;
  *
  */
 @ConfigurationProperties("spring.cloud.stream.solace")
-public class JscmpExtendedBindingProperties implements ExtendedBindingProperties<JcsmpConsumerProperties, JcsmpProducerProperties>{
+public class JcsmpExtendedBindingProperties implements ExtendedBindingProperties<JcsmpConsumerProperties, JcsmpProducerProperties>{
 
 	private Map<String, JcsmpProducerProperties> producerBindings = new HashMap<>();
 	private Map<String, JcsmpConsumerProperties> consumerBindings = new HashMap<>();

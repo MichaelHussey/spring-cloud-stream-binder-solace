@@ -8,5 +8,5 @@ public interface SolaceTopicSink {
 	String INPUT = "input";
 
 	@Input(Sink.INPUT)
-	TopicMessageChannel input();
+	InputMessageChannelAdapter input();
 }

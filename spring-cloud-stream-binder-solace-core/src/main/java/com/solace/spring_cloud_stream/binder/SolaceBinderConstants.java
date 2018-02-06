@@ -10,6 +10,7 @@ public class SolaceBinderConstants {
 	 * Solace message fields
 	 */
 	public static final String FIELD_APPLICATION_MESSAGE_ID = "ApplicationMessageId";
+	public static final String FIELD_APPLICATION_MESSAGE_TYPE = "ApplicationMessageType";
 	public static final String FIELD_APPLICATION_DELIVERY_MODE = "DeliveryMode";
 	public static final String FIELD_USER_PROPERTIES = "UserProperties";
 	public static final String FIELD_ATTACHMENT = "Attachment";

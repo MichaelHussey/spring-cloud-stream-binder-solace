@@ -1,5 +1,10 @@
-package com.solace.spring_cloud_stream.binder;
+package com.solace.spring_cloud_stream.binder.properties;
 
-public class JscmpProducerProperties {
+public class JcsmpProducerProperties {
+	
+	public boolean getHeaderMode()
+	{
+		return false;
+	}
 
 }

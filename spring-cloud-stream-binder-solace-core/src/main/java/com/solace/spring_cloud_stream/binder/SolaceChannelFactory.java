@@ -10,28 +10,29 @@ import org.springframework.cloud.stream.binding.MessageChannelConfigurer;
  * @author michussey
  *
  */
-public class SolaceChannelFactory extends AbstractBindingTargetFactory<TopicMessageChannel>  {
-
+public class SolaceChannelFactory extends AbstractBindingTargetFactory<InputMessageChannelAdapter>  {
 
 	public SolaceChannelFactory(MessageChannelConfigurer messageChannelConfigurer) {
-		super(TopicMessageChannel.class);
+		super(InputMessageChannelAdapter.class);
 		this.messageChannelConfigurer = messageChannelConfigurer;
 	}
 
 	private final MessageChannelConfigurer messageChannelConfigurer;
 
+	/**
+	 * Called when a interface is discovered which is annotated with "@Input(Sink.INPUT)"
+	 */
 	@Override
-	public TopicMessageChannel createInput(String name) {
-		TopicMessageChannel subscribableChannel = new TopicMessageChannel(name);
-		this.messageChannelConfigurer.configureInputChannel(subscribableChannel, name);
-		return subscribableChannel;
+	public InputMessageChannelAdapter createInput(String name) {
+		InputMessageChannelAdapter messageChannel = new InputMessageChannelAdapter(name);
+		messageChannelConfigurer.configureInputChannel(messageChannel, name);
+		return messageChannel;
 	}
 
 	@Override
-	public TopicMessageChannel createOutput(String name) {
-		TopicMessageChannel subscribableChannel = new TopicMessageChannel(name);
-		this.messageChannelConfigurer.configureInputChannel(subscribableChannel, name);
-		return subscribableChannel;
+	public InputMessageChannelAdapter createOutput(String name) {
+		InputMessageChannelAdapter messageChannel = new InputMessageChannelAdapter(name);
+		return messageChannel;
 	}
 
 }

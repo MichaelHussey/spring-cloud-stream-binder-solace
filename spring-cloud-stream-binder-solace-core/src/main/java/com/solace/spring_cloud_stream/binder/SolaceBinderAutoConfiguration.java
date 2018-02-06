@@ -11,6 +11,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.messaging.MessageChannel;
 
+import com.solace.spring_cloud_stream.binder.properties.SolaceConfigurationProperties;
+
 /**
  * 
  * @author michussey
@@ -18,11 +20,12 @@ import org.springframework.messaging.MessageChannel;
  */
 @Configuration
 @Import(SolaceBinderConfiguration.class)
-@ConditionalOnMissingBean(Binder.class)
+@ConditionalOnMissingBean(SolaceBinder.class)
 @EnableConfigurationProperties(SolaceConfigurationProperties.class)
 public class SolaceBinderAutoConfiguration {
 
-	@Bean
+	//@Bean
+	/*
 	public BinderFactory binderFactory(final Binder<MessageChannel, ?, ?> binder) {
 		return new BinderFactory() {
 			@SuppressWarnings("unchecked")
@@ -32,5 +35,6 @@ public class SolaceBinderAutoConfiguration {
 				return (Binder<T, ? extends ConsumerProperties, ? extends ProducerProperties>) binder;
 			}
 		};
-	}
+	}*/
+	
 }

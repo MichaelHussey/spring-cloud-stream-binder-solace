@@ -1,4 +1,4 @@
-package com.solace.spring_cloud_stream.binder;
+package com.solace.spring_cloud_stream.binder.properties;
 
 import javax.validation.constraints.NotNull;
 
@@ -14,7 +14,7 @@ import org.springframework.validation.annotation.Validated;
  *
  */
 @Component
-@ConfigurationProperties("solace")
+@ConfigurationProperties("spring.cloud.stream.solace.binder")
 @Validated
 public class SolaceConfigurationProperties {
 	
@@ -66,7 +66,6 @@ public class SolaceConfigurationProperties {
 	
 	/**
 	 * 
-	 */
 	@NotNull
 	private String topicName;
 	public String getTopicName() {
@@ -75,5 +74,6 @@ public class SolaceConfigurationProperties {
 	public void setTopicName(String topicName) {
 		this.topicName = topicName;
 	}
+	 */
 
 }

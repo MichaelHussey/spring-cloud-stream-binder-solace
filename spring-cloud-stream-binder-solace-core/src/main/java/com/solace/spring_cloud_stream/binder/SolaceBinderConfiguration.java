@@ -4,15 +4,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.cloud.stream.binder.Binder;
 import org.springframework.cloud.stream.binding.CompositeMessageChannelConfigurer;
 import org.springframework.cloud.stream.binding.SubscribableChannelBindingTargetFactory;
-import org.springframework.cloud.stream.config.BindingServiceConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.messaging.MessageChannel;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+
+import com.solace.spring_cloud_stream.binder.properties.JcsmpExtendedBindingProperties;
+import com.solace.spring_cloud_stream.binder.properties.SolaceConfigurationProperties;
 
 /**
  * Binder {@link org.springframework.context.annotation.Configuration} for the
@@ -23,21 +21,22 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
  *
  */
 @Configuration
-@EnableConfigurationProperties(SolaceConfigurationProperties.class)
+@EnableConfigurationProperties({SolaceConfigurationProperties.class, JcsmpExtendedBindingProperties.class})
 public class SolaceBinderConfiguration {
 
 	private static final Logger log = LoggerFactory.getLogger(SolaceBinderConfiguration.class);
 
-	private SolaceConfigurationProperties solaceProperties;
 	@Autowired
-	public void setSolaceProps(SolaceConfigurationProperties solaceProps) {
-		this.solaceProperties = solaceProps;
-	}
-
-	private Binder<TopicMessageChannel, ?, ?> solaceBinder = new SolaceBinder();
+	private SolaceConfigurationProperties solaceProperties;
 	
 	@Bean
-	public Binder<TopicMessageChannel, ?, ?> getSolaceBinder() {
+	public SolaceStreamProvisioner getSolaceStreamProvisioner(SolaceConfigurationProperties solaceProperties) {
+		return new SolaceStreamProvisioner(solaceProperties);
+	}
+
+	@Bean
+	public SolaceBinder getSolaceBinder(SolaceStreamProvisioner provisioningProvider) {
+		SolaceBinder solaceBinder = new SolaceBinder(null, provisioningProvider);
 		return solaceBinder;
 	}
 	
@@ -49,6 +48,7 @@ public class SolaceBinderConfiguration {
     @Bean(name="channelFactory")
 	public SolaceChannelFactory solaceChannelFactory(
 			CompositeMessageChannelConfigurer compositeMessageChannelConfigurer) {
+    	
 		return new SolaceChannelFactory(compositeMessageChannelConfigurer);
 	}
 }
