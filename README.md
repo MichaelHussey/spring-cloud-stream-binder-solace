@@ -29,7 +29,7 @@ Then simply use `File | Import... | Existing Projects into Workspace` in the IDE
 This section contains settings specific to the Solace Binder and bound channels.
 
 For general binding configuration options and properties, please refer to the 
-https://github.com/spring-cloud/spring-cloud-stream/blob/master/spring-cloud-stream-core-docs/src/main/asciidoc/spring-cloud-stream-overview.adoc#configuration-options[Spring Cloud Stream core documentation].
+[Spring Cloud Stream core documentation](https://github.com/spring-cloud/spring-cloud-stream/blob/master/spring-cloud-stream-core-docs/src/main/asciidoc/spring-cloud-stream-overview.adoc#configuration-options).
 
 ## Authors
 
