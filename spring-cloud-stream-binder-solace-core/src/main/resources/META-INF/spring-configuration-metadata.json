@@ -1,36 +1,36 @@
 {
   "groups": [{
-    "name": "solace",
+    "name": "spring.cloud.stream.solace.binder",
     "type": "com.solace.spring_cloud_stream.binder.SolaceConfigurationProperties",
     "sourceType": "com.solace.spring_cloud_stream.binder.SolaceConfigurationProperties"
   }],
   "properties": [
     {
-      "name": "solace.smfHost",
+      "name": "spring.cloud.stream.solace.binder.smfHost",
       "type": "java.lang.String",
       "description": "IP Address and port number for SMF connection to the router. Default port for VMR and appliance is 55555",
       "sourceType": "com.solace.spring_cloud_stream.binder.SolaceConfigurationProperties"
     },
     {
-      "name": "solace.msgVpn",
+      "name": "spring.cloud.stream.solace.binder.msgVpn",
       "type": "java.lang.String",
       "description": "Which message VPN to use. VMR is configured OOTB with a VPN called *default*",
       "sourceType": "com.solace.spring_cloud_stream.binder.SolaceConfigurationProperties"
     },
     {
-      "name": "solace.username",
+      "name": "spring.cloud.stream.solace.binder.username",
       "type": "java.lang.String",
       "description": "Which identity to use. VMR is configured OOTB with a username called *default*",
       "sourceType": "com.solace.spring_cloud_stream.binder.SolaceConfigurationProperties"
     },
     {
-      "name": "solace.password",
+      "name": "spring.cloud.stream.solace.binder.password",
       "type": "java.lang.String",
       "description": "Password for the identity. VMR is configured OOTB with no password for the username called *default*",
       "sourceType": "com.solace.spring_cloud_stream.binder.SolaceConfigurationProperties"
     },
     {
-      "name": "solace.password",
+      "name": "spring.cloud.stream.solace.binder.password",
       "type": "java.lang.String",
       "description": "Password for the identity. VMR is configured OOTB with no password for the username called *default*",
       "sourceType": "com.solace.spring_cloud_stream.binder.SolaceConfigurationProperties"
