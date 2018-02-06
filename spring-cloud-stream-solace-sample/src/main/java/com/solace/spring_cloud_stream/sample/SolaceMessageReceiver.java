@@ -5,6 +5,7 @@ package com.solace.spring_cloud_stream.sample;
  */
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.annotation.StreamListener;
+import org.springframework.cloud.stream.messaging.Sink;
 import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.messaging.Message;
 
@@ -15,9 +16,15 @@ public class SolaceMessageReceiver {
 
 
 	@StreamListener(SolaceTopicSink.INPUT)
-	@ServiceActivator(inputChannel = SolaceTopicSink.INPUT)
+	//@ServiceActivator(inputChannel = SolaceTopicSink.INPUT)
 	public void testMessage(Message<?> message) {
 		System.out.println("Received testMessage: "+message);
+	}
+	
+	//@StreamListener(SolaceTopicSink.INPUT)
+	@ServiceActivator(inputChannel = "input1")
+	public void testMessage1(Message<?> message) {
+		System.out.println("Received testMessage1: "+message);
 	}
 
 }

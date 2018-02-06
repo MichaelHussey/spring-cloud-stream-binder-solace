@@ -12,11 +12,12 @@ import com.solace.spring_cloud_stream.binder.SolaceBinderConfiguration;
 @SpringBootApplication
 @Import(SolaceBinderConfiguration.class)
 public class SpringCloudSolaceApp {
-		
+	
+	/**
 	@Transformer(inputChannel = Processor.INPUT, outputChannel = Processor.OUTPUT)
 	public String transform(String in) {
 		return in + " world";
-	}
+	}*/
 
     static final String LISTEN_TOPIC = "test/>";
 
