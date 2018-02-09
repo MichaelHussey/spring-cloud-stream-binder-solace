@@ -20,9 +20,11 @@ import org.springframework.util.Assert;
 
 import com.solace.spring_cloud_stream.binder.properties.JcsmpConsumerProperties;
 import com.solacesystems.jcsmp.BytesXMLMessage;
+import com.solacesystems.jcsmp.Destination;
 import com.solacesystems.jcsmp.JCSMPException;
 import com.solacesystems.jcsmp.JCSMPFactory;
 import com.solacesystems.jcsmp.JCSMPSession;
+import com.solacesystems.jcsmp.Queue;
 import com.solacesystems.jcsmp.SDTException;
 import com.solacesystems.jcsmp.SDTMap;
 import com.solacesystems.jcsmp.SessionEventArgs;
@@ -153,16 +155,24 @@ public class InputMessageChannelAdapter extends AbstractSubscribableChannel impl
 		
 		// TODO: set all the standard header properties
 		
-		headerMap.put(SolaceBinderConstants.FIELD_APPLICATION_MESSAGE_ID, 
+		headerMap = Utils.putIfNotNull(headerMap, SolaceBinderConstants.FIELD_APPLICATION_MESSAGE_ID, 
 				solaceMessage.getApplicationMessageId());
-		headerMap.put(SolaceBinderConstants.FIELD_CORRELATION_ID, 
+		headerMap = Utils.putIfNotNull(headerMap, SolaceBinderConstants.FIELD_CORRELATION_ID, 
 				solaceMessage.getCorrelationKey());
-		headerMap.put(SolaceBinderConstants.FIELD_APPLICATION_MESSAGE_TYPE, 
+		headerMap = Utils.putIfNotNull(headerMap, SolaceBinderConstants.FIELD_APPLICATION_MESSAGE_TYPE, 
 				solaceMessage.getApplicationMessageType());
-		headerMap.put(SolaceBinderConstants.FIELD_SENDERID, 
+		headerMap = Utils.putIfNotNull(headerMap, SolaceBinderConstants.FIELD_SENDERID, 
 				solaceMessage.getSenderId());
-		headerMap.put(SolaceBinderConstants.FIELD_SENDER_TIMESTAMP, 
+		headerMap = Utils.putIfNotNull(headerMap, SolaceBinderConstants.FIELD_SENDER_TIMESTAMP, 
 				solaceMessage.getSenderTimestamp());
+		
+		// Store the topic or queue name on which we received the message
+		Destination dest = solaceMessage.getDestination();
+		String prefix = "T/";
+		if (dest instanceof Queue) {
+			prefix = "Q/";
+		}
+		headerMap.put(SolaceBinderConstants.FIELD_DESTINATION_NAME, prefix+dest.getName());
 		
 		// Map any user properties
 		SDTMap userProperties = solaceMessage.getProperties();
@@ -191,11 +201,9 @@ public class InputMessageChannelAdapter extends AbstractSubscribableChannel impl
 		} else {
 			springMessage = MessageBuilder.createMessage(solaceMessage.getBytes(), mh);
 		}
-		System.err.println(springMessage.toString());
-
 		outputChannel.send(springMessage);
 	}
-
+	
 	/**
 	 * from {@link SessionEventHandler}
 	 */

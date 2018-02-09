@@ -32,4 +32,6 @@ public class SolaceBinderConstants {
 	public static final String FIELD_SENDERID = "SenderId";
 	public static final String FIELD_SENDER_TIMESTAMP = "SenderTimestamp";
 	public static final String FIELD_SEQUENCE_NUMBER = "SequenceNumber";
+
+	public static final String FIELD_DESTINATION_NAME = "DestinationName";
 }

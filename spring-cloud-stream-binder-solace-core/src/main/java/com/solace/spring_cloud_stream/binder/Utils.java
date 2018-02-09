@@ -1,5 +1,7 @@
 package com.solace.spring_cloud_stream.binder;
 
+import java.util.HashMap;
+
 import com.solacesystems.jcsmp.JCSMPErrorResponseException;
 import com.solacesystems.jcsmp.JCSMPException;
 import com.solacesystems.jcsmp.SessionEvent;
@@ -73,4 +75,21 @@ public class Utils {
 		sb.append("}");
 		return sb.toString();
 	}
+	/**
+	 * Helper method when translating Solace messages to Spring messages
+	 * Only add a particular message property if value isn't null
+	 * @param inMap
+	 * @param key
+	 * @param value
+	 * @return
+	 */
+	public static HashMap<String, Object> putIfNotNull(HashMap<String, Object> inMap, String key, Object value)
+	{
+		if (value != null)
+		{
+			inMap.put(key, value);
+		}
+		return inMap;
+	}
+
 }
