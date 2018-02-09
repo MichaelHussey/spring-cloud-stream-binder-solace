@@ -1,2 +1,0 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-	com.solace.spring_cloud_stream.binder.SolaceBinderAutoConfiguration
