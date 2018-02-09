@@ -21,6 +21,7 @@ task copyDepJars(type: Copy) {
 assemble.dependsOn copyDepJars
 
 repositories {
+    maven { url "http://repo.spring.io/snapshot" }
     mavenCentral()
 }
 
@@ -30,11 +31,9 @@ dependencies {
 	compile project(':spring-cloud-stream-binder-solace-core')
 	
 	// https://mvnrepository.com/artifact/org.springframework.cloud/spring-cloud-stream
-	compile group: 'org.springframework.cloud', name: 'spring-cloud-stream', version: '1.3.0.RELEASE'
+	//compile group: 'org.springframework.cloud', name: 'spring-cloud-stream', version: '1.3.0.RELEASE'
+	compile group: 'org.springframework.cloud', name: 'spring-cloud-stream', version: '2.0.0.BUILD-SNAPSHOT'
 	
-	// https://mvnrepository.com/artifact/org.springframework.cloud/spring-cloud-stream
-	compile group: 'org.springframework.cloud', name: 'spring-cloud-stream', version: '1.3.0.RELEASE'
-
 	// https://mvnrepository.com/artifact/org.slf4j/slf4j-api
 	compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25'
 
