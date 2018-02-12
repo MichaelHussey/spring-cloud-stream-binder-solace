@@ -39,7 +39,6 @@ SolaceStreamProvisioner> implements ExtendedPropertiesBinder<MessageChannel, Jcs
 
 	public SolaceBinder(String[] headersToEmbed, SolaceStreamProvisioner provisioningProvider) {
 		super(headersToEmbed, provisioningProvider);
-		System.err.println("SolaceBinder constructor invoked");
 	}
 
 	/**
@@ -136,12 +135,10 @@ SolaceStreamProvisioner> implements ExtendedPropertiesBinder<MessageChannel, Jcs
 
 		properties.setProperty(JCSMPProperties.CLIENT_CHANNEL_PROPERTIES, channelProps);
 
-
-		log.info("Connecting to Solace Message Router...");
 		ContextProperties contextProperties = new ContextProperties();
 
 		context = JCSMPFactory.onlyInstance().createContext(contextProperties);
-		log.info("Connection to Solace Message Router succeeded!");
+		log.info("Solace context created.");
 	}
 
 	@Override

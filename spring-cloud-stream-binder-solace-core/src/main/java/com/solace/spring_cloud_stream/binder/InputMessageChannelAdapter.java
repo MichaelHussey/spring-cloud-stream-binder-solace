@@ -2,7 +2,6 @@ package com.solace.spring_cloud_stream.binder;
 
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -127,9 +126,10 @@ public class InputMessageChannelAdapter extends AbstractSubscribableChannel impl
 	 */
 	public void doSubscribe(SolaceBinder binder, ConsumerDestination destination, ExtendedConsumerProperties<JcsmpConsumerProperties> properties) {
 		try {
-			session = JCSMPFactory.onlyInstance().createSession(binder.getProperties(),binder.getContext(), this);
-			session.connect();		
-			logger.info("Connection to Solace Message Router succeeded!");
+			session = JCSMPFactory.onlyInstance().createSession(binder.getProperties(), binder.getContext(), this);
+			session.connect();
+			if (logger.isInfoEnabled())		
+				logger.info("Channel ["+this.channelName+"] Connection to Solace Message Router succeeded!");
 
 			topicName = destination.getName();
 
@@ -137,7 +137,8 @@ public class InputMessageChannelAdapter extends AbstractSubscribableChannel impl
 			consumer = session.getMessageConsumer(this);
 			session.addSubscription(topic);
 			consumer.start();
-			logger.info("Channel "+this.channelName+" subscribed successfully to "+topicName);
+			if (logger.isInfoEnabled())
+				logger.info("Channel ["+this.channelName+"] subscribed successfully to "+topicName);
 		} catch (JCSMPException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -149,12 +150,13 @@ public class InputMessageChannelAdapter extends AbstractSubscribableChannel impl
 	 */
 	@Override
 	public void onReceive(BytesXMLMessage solaceMessage) {
-		logger.info("Channel "+this.channelName+" received message on "+topicName);
+		if (logger.isInfoEnabled())
+			logger.info("Channel ["+this.channelName+"] received message on "+topicName);
 		Message<?> springMessage = null;
 		HashMap<String, Object> headerMap = new HashMap<String, Object>();
-		
+
 		// TODO: set all the standard header properties
-		
+
 		headerMap = Utils.putIfNotNull(headerMap, SolaceBinderConstants.FIELD_APPLICATION_MESSAGE_ID, 
 				solaceMessage.getApplicationMessageId());
 		headerMap = Utils.putIfNotNull(headerMap, SolaceBinderConstants.FIELD_CORRELATION_ID, 
@@ -165,7 +167,7 @@ public class InputMessageChannelAdapter extends AbstractSubscribableChannel impl
 				solaceMessage.getSenderId());
 		headerMap = Utils.putIfNotNull(headerMap, SolaceBinderConstants.FIELD_SENDER_TIMESTAMP, 
 				solaceMessage.getSenderTimestamp());
-		
+
 		// Store the topic or queue name on which we received the message
 		Destination dest = solaceMessage.getDestination();
 		String prefix = "T/";
@@ -173,7 +175,7 @@ public class InputMessageChannelAdapter extends AbstractSubscribableChannel impl
 			prefix = "Q/";
 		}
 		headerMap.put(SolaceBinderConstants.FIELD_DESTINATION_NAME, prefix+dest.getName());
-		
+
 		// Map any user properties
 		SDTMap userProperties = solaceMessage.getProperties();
 		if (userProperties != null)
@@ -193,7 +195,6 @@ public class InputMessageChannelAdapter extends AbstractSubscribableChannel impl
 
 
 		MessageHeaders mh = new MessageHeaders(headerMap);
-		MessageBuilder<?> springMB;
 		if (solaceMessage instanceof TextMessage)
 		{
 			TextMessage solaceTextMessage = (TextMessage) solaceMessage;
@@ -203,7 +204,7 @@ public class InputMessageChannelAdapter extends AbstractSubscribableChannel impl
 		}
 		outputChannel.send(springMessage);
 	}
-	
+
 	/**
 	 * from {@link SessionEventHandler}
 	 */

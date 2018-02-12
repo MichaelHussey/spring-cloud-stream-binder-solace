@@ -2,6 +2,9 @@ package com.solace.spring_cloud_stream.sample;
 
 /**
  * Class to which the SolaceBinder will pass Messages received from VMR
+ * 
+ * Annotate methods with either @StreamListener or @ServiceActivator in order to receive
+ * messages from the configured channels
  */
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.annotation.StreamListener;
