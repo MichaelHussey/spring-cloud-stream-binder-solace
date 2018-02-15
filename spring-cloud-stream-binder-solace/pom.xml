@@ -14,17 +14,16 @@
 	<description>Spring Cloud Stream Binder for Solace messaging</description>
 	<packaging>jar</packaging>
 
-	<dependencies>
-		<!-- https://mvnrepository.com/artifact/com.solacesystems/sol-jcsmp -->
-		<dependency>
-			<groupId>com.solacesystems</groupId>
-			<artifactId>sol-jcsmp</artifactId>
-			<version>10.1.1</version>
-		</dependency>
+	<!--  dependencies>
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-stream</artifactId>
 			<version>${spring-cloud-stream.version}</version>
 		</dependency>
-	</dependencies>
+		<dependency>
+			<groupId>com.solacesystems</groupId>
+			<artifactId>sol-jcsmp</artifactId>
+			<version>10.1.1</version>
+		</dependency>
+	</dependencies -->
 </project>
