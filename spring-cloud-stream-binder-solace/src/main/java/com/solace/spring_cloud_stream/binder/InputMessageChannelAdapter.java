@@ -44,7 +44,6 @@ public class InputMessageChannelAdapter extends AbstractSubscribableChannel impl
 
 	private volatile String outputChannelName;
 
-	protected Topic topic;
 	protected XMLMessageConsumer consumer;
 
 	/** 
@@ -58,9 +57,9 @@ public class InputMessageChannelAdapter extends AbstractSubscribableChannel impl
 
 	private volatile MessageChannel outputChannel;
 
-	protected String topicName;
-
 	protected String channelName;
+	
+	protected SolaceConsumerDestination destination;
 
 	public InputMessageChannelAdapter(String name) {
 
@@ -76,7 +75,7 @@ public class InputMessageChannelAdapter extends AbstractSubscribableChannel impl
 
 	@Override
 	public void onException(JCSMPException arg0) {
-		logger.warn("Exception processing received message on topic "+topicName+": "+Utils.jcsmpExceptionToString(arg0));
+		logger.warn("Exception processing received message on topic "+destination.getName()+": "+Utils.jcsmpExceptionToString(arg0));
 	}
 
 	/**
@@ -124,21 +123,23 @@ public class InputMessageChannelAdapter extends AbstractSubscribableChannel impl
 	 * @param destination
 	 * @param properties 
 	 */
-	public void doSubscribe(SolaceBinder binder, ConsumerDestination destination, ExtendedConsumerProperties<JcsmpConsumerProperties> properties) {
+	public void doSubscribe(SolaceBinder binder, ConsumerDestination _destination, ExtendedConsumerProperties<JcsmpConsumerProperties> properties) {
 		try {
 			session = JCSMPFactory.onlyInstance().createSession(binder.getProperties(), binder.getContext(), this);
 			session.connect();
 			if (logger.isInfoEnabled())		
 				logger.info("Channel ["+this.channelName+"] Connection to Solace Message Router succeeded!");
 
-			topicName = destination.getName();
+			if (_destination instanceof SolaceConsumerDestination) 
+			{
+				destination = (SolaceConsumerDestination) _destination;
+			}
 
-			topic = JCSMPFactory.onlyInstance().createTopic(topicName);
 			consumer = session.getMessageConsumer(this);
-			session.addSubscription(topic);
+			session.addSubscription(destination.getTopic());
 			consumer.start();
 			if (logger.isInfoEnabled())
-				logger.info("Channel ["+this.channelName+"] subscribed successfully to "+topicName);
+				logger.info("Channel ["+this.channelName+"] subscribed successfully to "+destination.getName());
 		} catch (JCSMPException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -151,7 +152,7 @@ public class InputMessageChannelAdapter extends AbstractSubscribableChannel impl
 	@Override
 	public void onReceive(BytesXMLMessage solaceMessage) {
 		if (logger.isInfoEnabled())
-			logger.info("Channel ["+this.channelName+"] received message on "+topicName);
+			logger.info("Channel ["+this.channelName+"] received message on "+destination.getName());
 		Message<?> springMessage = null;
 		HashMap<String, Object> headerMap = new HashMap<String, Object>();
 
