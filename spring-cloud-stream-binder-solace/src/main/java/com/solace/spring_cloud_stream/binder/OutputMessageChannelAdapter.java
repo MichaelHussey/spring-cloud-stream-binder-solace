@@ -2,51 +2,67 @@ package com.solace.spring_cloud_stream.binder;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.binder.ExtendedProducerProperties;
 import org.springframework.cloud.stream.provisioning.ProducerDestination;
+import org.springframework.integration.channel.DirectChannel;
 import org.springframework.integration.endpoint.MessageProducerSupport;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
+import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.MessagingException;
 
 import com.solace.spring_cloud_stream.binder.properties.JcsmpProducerProperties;
+import com.solacesystems.jcsmp.BytesXMLMessage;
+import com.solacesystems.jcsmp.Context;
 import com.solacesystems.jcsmp.InvalidPropertiesException;
 import com.solacesystems.jcsmp.JCSMPException;
 import com.solacesystems.jcsmp.JCSMPFactory;
 import com.solacesystems.jcsmp.JCSMPSession;
+import com.solacesystems.jcsmp.JCSMPStreamingPublishEventHandler;
 import com.solacesystems.jcsmp.SessionEventArgs;
 import com.solacesystems.jcsmp.SessionEventHandler;
 import com.solacesystems.jcsmp.Topic;
+import com.solacesystems.jcsmp.XMLMessage;
+import com.solacesystems.jcsmp.XMLMessageProducer;
+import org.springframework.beans.factory.DisposableBean;
 
-public class OutputMessageChannelAdapter extends MessageProducerSupport implements MessageHandler, SessionEventHandler {
+
+public class OutputMessageChannelAdapter extends MessageProducerSupport implements MessageHandler, SessionEventHandler, JCSMPStreamingPublishEventHandler, DisposableBean {
 
 	private static final Logger logger = LoggerFactory.getLogger(OutputMessageChannelAdapter.class);
 
-	protected Topic topic;
 	protected JCSMPSession session;
 
-	protected String topicName;
+	//protected String channelName;
+	
+	protected XMLMessageProducer producer;
+	
+	protected SolaceProducerDestination destination;
 
-	protected String channelName;
-
-	public OutputMessageChannelAdapter(String name) {
-
-		logger.info("Construct OutputMessageChannelAdapter:"+name);
-		channelName = name;
+	private String name;
+	
+	@Override
+	protected void doStart() {
+		super.doStart();
+		logger.info("Starting OutputMessageChannelAdapter: "+name);
 	}
 
-	public void createPublisher(SolaceBinder binder, ProducerDestination destination,
+	public void createPublisher(SolaceBinder binder, ProducerDestination _destination,
 			ExtendedProducerProperties<JcsmpProducerProperties> producerProperties, MessageChannel errorChannel2) {
 
 		try {
-			session = JCSMPFactory.onlyInstance().createSession(binder.getProperties(),binder.getContext(), this);
+			session = JCSMPFactory.onlyInstance().createSession(binder.getProperties(), binder.getContext(), this);
 			session.connect();		
 			logger.info("Connection to Solace Message Router succeeded!");
+			
+			if (_destination instanceof SolaceProducerDestination)
+			{
+				destination = (SolaceProducerDestination) _destination;
+			}
 
-			topicName = destination.getName();
-
-			topic = JCSMPFactory.onlyInstance().createTopic(topicName);
+			producer = session.getMessageProducer(this);
 		} catch (InvalidPropertiesException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -56,7 +72,7 @@ public class OutputMessageChannelAdapter extends MessageProducerSupport implemen
 		}
 		//TODO: complete impl
 	}
-
+		
 	/**
 	 * from {@link MessageHandler} 
 	 * @param message
@@ -64,8 +80,19 @@ public class OutputMessageChannelAdapter extends MessageProducerSupport implemen
 	 */
 	@Override
 	public void handleMessage(Message<?> message) throws MessagingException {
-		// TODO Auto-generated method stub
-
+		logger.info("Processing message: "+message);
+		XMLMessage solaceMessage = JCSMPFactory.onlyInstance().createMessage(BytesXMLMessage.class);
+		try {
+			MessageHeaders headers = message.getHeaders();
+			if (headers.containsKey(SolaceBinderConstants.FIELD_CORRELATION_ID)) {
+				solaceMessage.setCorrelationId((String) headers.get(SolaceBinderConstants.FIELD_CORRELATION_ID));
+			}
+			producer.send(solaceMessage , destination.getTopic());
+			logger.info("Sent message to destination ["+destination.getName()+"]");
+		} catch (JCSMPException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	/**
 	 * from {@link SessionEventHandler}
@@ -86,6 +113,38 @@ public class OutputMessageChannelAdapter extends MessageProducerSupport implemen
 				logger.info("Solace session event received: "+Utils.sessionEventToString(arg0));
 			}
 		}
+	}
+	
+
+	/**
+	 * from {@link JCSMPStreamingPublishEventHandler}
+	 */
+	@Override
+	public void handleError(String arg0, JCSMPException arg1, long arg2) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	/**
+	 * from {@link JCSMPStreamingPublishEventHandler}
+	 */
+	@Override
+	public void responseReceived(String arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	@Override
+	public String toString() {
+		return "OutputMessageChannelAdapter{" +
+				"name=" + name +
+				", destination='" + this.destination.getName() + '\'' +
+				'}';
+	}
+
+	public void setChannelName(String _name) {
+		this.name = _name;
+
 	}
 
 }

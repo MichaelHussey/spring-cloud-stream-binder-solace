@@ -35,8 +35,10 @@ ProvisioningProvider<ExtendedConsumerProperties<JcsmpConsumerProperties>, Extend
 	@Override
 	public ProducerDestination provisionProducerDestination(String name,
 			ExtendedProducerProperties<JcsmpProducerProperties> properties) throws ProvisioningException {
-		// TODO Auto-generated method stub
-		return null;
+		if (logger.isInfoEnabled()) {
+			logger.info("Using Solace topic for outbound: " + name);
+		}
+		return new SolaceProducerDestination(name, properties);
 	}
 
 	@Override

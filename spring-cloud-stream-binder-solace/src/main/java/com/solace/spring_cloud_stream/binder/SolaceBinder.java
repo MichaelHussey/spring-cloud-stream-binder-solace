@@ -64,6 +64,8 @@ SolaceStreamProvisioner> implements ExtendedPropertiesBinder<MessageChannel, Jcs
 	InputMessageChannelAdapter messageChannelAdapter;
 
 	protected OutputMessageChannelAdapter replyChannelAdapter;
+	
+	protected volatile OutputMessageChannelAdapter lastCreatedOutputChannelAdapter;
 
 	protected OutputMessageChannelAdapter getReplyChannelAdapter() {
 		if (replyChannelAdapter == null)
@@ -74,7 +76,8 @@ SolaceStreamProvisioner> implements ExtendedPropertiesBinder<MessageChannel, Jcs
 				replyChannelName = messageChannelAdapter.channelName;
 			}
 			replyChannelName = replyChannelName + ".reply";
-			replyChannelAdapter = new OutputMessageChannelAdapter(replyChannelName);
+			replyChannelAdapter = new OutputMessageChannelAdapter();
+			replyChannelAdapter.setChannelName(replyChannelName);
 		}
 		return replyChannelAdapter;
 	}
@@ -150,7 +153,7 @@ SolaceStreamProvisioner> implements ExtendedPropertiesBinder<MessageChannel, Jcs
 	public JcsmpProducerProperties getExtendedProducerProperties(String channelName) {
 		return this.extendedBindingProperties.getExtendedProducerProperties(channelName);
 	}
-
+	
 	@Override
 	protected MessageHandler createProducerMessageHandler(ProducerDestination destination,
 			ExtendedProducerProperties<JcsmpProducerProperties> producerProperties, MessageChannel errorChannel)
@@ -158,11 +161,22 @@ SolaceStreamProvisioner> implements ExtendedPropertiesBinder<MessageChannel, Jcs
 
 		Assert.state(!HeaderMode.embeddedHeaders.equals(producerProperties.getHeaderMode()),
 				"the Solace binder does not support embedded headers since Solace supports headers natively");
-
+		OutputMessageChannelAdapter outputChannelAdapter = null;
 		if (destination != null) {
-			getReplyChannelAdapter().createPublisher(this, destination, producerProperties, errorChannel);
+			Object bf = this.getBeanFactory();
+			outputChannelAdapter = new OutputMessageChannelAdapter();
+			outputChannelAdapter.createPublisher(this, destination, producerProperties, errorChannel);
+			
+			lastCreatedOutputChannelAdapter = outputChannelAdapter;
+			log.info("Created outputChannelAdapter for ["+destination.getName()+"]");
 		}
-		return getReplyChannelAdapter();
+		return outputChannelAdapter;
+	}
+	@Override
+	protected void postProcessOutputChannel(MessageChannel outputChannel, ExtendedProducerProperties<JcsmpProducerProperties> producerProperties) {
+		lastCreatedOutputChannelAdapter.setOutputChannel(outputChannel);
+		lastCreatedOutputChannelAdapter.setChannelName(outputChannel.toString());
+		log.info("postProcessOutputChannel: "+lastCreatedOutputChannelAdapter.toString());
 	}
 
 	/**
