@@ -8,10 +8,8 @@ package com.solace.spring_cloud_stream.sample;
  */
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.annotation.StreamListener;
-import org.springframework.cloud.stream.messaging.Sink;
 import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.messaging.Message;
-
 import com.solace.spring_cloud_stream.binder.SolaceTopicSink;
 
 @EnableBinding(ListenerDefinitionInterface.class)
@@ -29,5 +27,4 @@ public class SolaceMessageReceiver {
 	public void testMessage1(Message<?> message) {
 		System.out.println("Received testMessage1: "+message);
 	}
-
 }

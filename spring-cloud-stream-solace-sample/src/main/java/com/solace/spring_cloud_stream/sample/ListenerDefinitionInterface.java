@@ -1,7 +1,6 @@
 package com.solace.spring_cloud_stream.sample;
 
 import org.springframework.cloud.stream.annotation.Input;
-import org.springframework.cloud.stream.messaging.Sink;
 
 import com.solace.spring_cloud_stream.binder.InputMessageChannelAdapter;
 
@@ -20,5 +19,4 @@ public interface ListenerDefinitionInterface {
 
     @Input("input1")
     InputMessageChannelAdapter testMessage1();
-
 }
