@@ -152,7 +152,7 @@ public class InputMessageChannelAdapter extends AbstractSubscribableChannel impl
 	@Override
 	public void onReceive(BytesXMLMessage solaceMessage) {
 		if (logger.isInfoEnabled())
-			logger.info("Channel ["+this.channelName+"] received message on "+destination.getName());
+			logger.info("Channel ["+this.channelName+"] received message on "+destination.getName()+" payload size: "+solaceMessage.getContentLength());
 		Message<?> springMessage = null;
 		HashMap<String, Object> headerMap = new HashMap<String, Object>();
 
