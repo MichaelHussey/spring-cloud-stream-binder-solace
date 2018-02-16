@@ -163,7 +163,6 @@ SolaceStreamProvisioner> implements ExtendedPropertiesBinder<MessageChannel, Jcs
 				"the Solace binder does not support embedded headers since Solace supports headers natively");
 		OutputMessageChannelAdapter outputChannelAdapter = null;
 		if (destination != null) {
-			Object bf = this.getBeanFactory();
 			outputChannelAdapter = new OutputMessageChannelAdapter();
 			outputChannelAdapter.createPublisher(this, destination, producerProperties, errorChannel);
 			
