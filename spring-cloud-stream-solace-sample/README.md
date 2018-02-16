@@ -4,7 +4,7 @@ Sample showing usage of spring-cloud-stream-binder-solace
 ## Getting Started
 
 Edit the <code>src/main/resources/application.properties</code> file and set the parameters for connection to 
-a Solace Message Router. See the [Configuration](../spring-cloud-stream-binder-parent/README.md#configuration-options) section of the 
+a Solace Message Router. See the [Configuration](../README.md#configuration-options) section of the 
 Binder documentation for a list of properties.
 
 Compile the binder and this demo program and then run using the Maven target as follows: 
