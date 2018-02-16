@@ -87,6 +87,17 @@ public class OutputMessageChannelAdapter extends MessageProducerSupport implemen
 			if (headers.containsKey(SolaceBinderConstants.FIELD_CORRELATION_ID)) {
 				solaceMessage.setCorrelationId((String) headers.get(SolaceBinderConstants.FIELD_CORRELATION_ID));
 			}
+			Object payloadObject = message.getPayload();
+			byte[] payloadBytes = null;
+			if (payloadObject instanceof byte[])
+			{
+				payloadBytes = (byte[]) payloadObject;
+			}
+			else
+			{
+				logger.warn("Can't handle payload of type ["+payloadObject.getClass().getName()+"]");
+			}
+			solaceMessage.writeAttachment(payloadBytes);
 			producer.send(solaceMessage , destination.getTopic());
 			logger.info("Sent message to destination ["+destination.getName()+"]");
 		} catch (JCSMPException e) {
