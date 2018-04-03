@@ -2,10 +2,9 @@ package com.solace.spring_cloud_stream.binder;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.cloud.stream.binder.ExtendedProducerProperties;
 import org.springframework.cloud.stream.provisioning.ProducerDestination;
-import org.springframework.integration.channel.DirectChannel;
 import org.springframework.integration.endpoint.MessageProducerSupport;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -15,7 +14,6 @@ import org.springframework.messaging.MessagingException;
 
 import com.solace.spring_cloud_stream.binder.properties.JcsmpProducerProperties;
 import com.solacesystems.jcsmp.BytesXMLMessage;
-import com.solacesystems.jcsmp.Context;
 import com.solacesystems.jcsmp.InvalidPropertiesException;
 import com.solacesystems.jcsmp.JCSMPException;
 import com.solacesystems.jcsmp.JCSMPFactory;
@@ -23,10 +21,8 @@ import com.solacesystems.jcsmp.JCSMPSession;
 import com.solacesystems.jcsmp.JCSMPStreamingPublishEventHandler;
 import com.solacesystems.jcsmp.SessionEventArgs;
 import com.solacesystems.jcsmp.SessionEventHandler;
-import com.solacesystems.jcsmp.Topic;
 import com.solacesystems.jcsmp.XMLMessage;
 import com.solacesystems.jcsmp.XMLMessageProducer;
-import org.springframework.beans.factory.DisposableBean;
 
 
 public class OutputMessageChannelAdapter extends MessageProducerSupport implements MessageHandler, SessionEventHandler, JCSMPStreamingPublishEventHandler, DisposableBean {

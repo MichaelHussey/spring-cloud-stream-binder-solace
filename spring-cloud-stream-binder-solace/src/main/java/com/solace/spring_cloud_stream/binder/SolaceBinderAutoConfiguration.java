@@ -2,14 +2,8 @@ package com.solace.spring_cloud_stream.binder;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.cloud.stream.binder.Binder;
-import org.springframework.cloud.stream.binder.BinderFactory;
-import org.springframework.cloud.stream.binder.ConsumerProperties;
-import org.springframework.cloud.stream.binder.ProducerProperties;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.messaging.MessageChannel;
 
 import com.solace.spring_cloud_stream.binder.properties.SolaceConfigurationProperties;
 

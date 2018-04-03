@@ -4,9 +4,8 @@ import org.springframework.cloud.stream.binder.ExtendedProducerProperties;
 import org.springframework.cloud.stream.provisioning.ProducerDestination;
 
 import com.solace.spring_cloud_stream.binder.properties.JcsmpProducerProperties;
-import com.solacesystems.jcsmp.InvalidPropertiesException;
-import com.solacesystems.jcsmp.Topic;
 import com.solacesystems.jcsmp.JCSMPFactory;
+import com.solacesystems.jcsmp.Topic;
 
 public class SolaceProducerDestination implements ProducerDestination {
 
