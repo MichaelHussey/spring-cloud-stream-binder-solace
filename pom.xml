@@ -10,9 +10,10 @@
 	<packaging>pom</packaging>
 
 	<properties>
-		<spring-cloud-stream.version>2.0.0.BUILD-SNAPSHOT</spring-cloud-stream.version>
+		<spring-cloud-stream.version>2.0.0.RELEASE</spring-cloud-stream.version>
 		<springframework.boot.version>2.0.0.RELEASE</springframework.boot.version>
-		<spring-cloud-dependencies.version>Finchley.M9</spring-cloud-dependencies.version>
+		<spring-cloud-dependencies.version>Elmhurst.RELEASE</spring-cloud-dependencies.version>
+		<junit-version>4.12</junit-version>
 		<!-- 
 		Make sure we use the same version of Jackson as AWS SDK 
 		See https://github.com/aws/aws-sdk-java/blob/master/pom.xml for correct ones to use
@@ -37,6 +38,13 @@
 			<artifactId>sol-jcsmp</artifactId>
 			<version>10.1.1</version>
 		</dependency>
+    <!-- test dependencies -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>${junit-version}</version>
+      <scope>test</scope>
+    </dependency>
 	</dependencies>
 	
 	<modules>
