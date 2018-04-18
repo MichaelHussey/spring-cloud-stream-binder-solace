@@ -1,6 +1,7 @@
 package com.solace.spring_cloud_stream.binder;
 
 import java.util.HashMap;
+import org.apache.commons.lang.exception.ExceptionUtils;
 
 import com.solacesystems.jcsmp.JCSMPErrorResponseException;
 import com.solacesystems.jcsmp.JCSMPException;
@@ -72,6 +73,9 @@ public class Utils {
 		StringBuilder sb = new StringBuilder("{\"info\":");
 		sb.append(exception.getExtraInfo());
 		sb.append(", \"event\":\"");
+		sb.append(exception.getMessage());
+		sb.append(", \"stacktrace\":\"");
+		sb.append(ExceptionUtils.getStackTrace(exception));
 		sb.append("}");
 		return sb.toString();
 	}
@@ -91,5 +95,4 @@ public class Utils {
 		}
 		return inMap;
 	}
-
 }
