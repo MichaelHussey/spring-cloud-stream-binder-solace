@@ -182,10 +182,12 @@ public class SolaceMessage<T> implements Message<T>, Serializable {
 	 * 
 	 * @param springMessage
 	 */
+	@SuppressWarnings("unchecked")
 	public SolaceMessage(Message<?> springMessage) {
 		this.springMessage = springMessage;
 		this.direction = MappingDirection.SPRING2SOLACE;
 		this.springHeaders = springMessage.getHeaders();
+		this.payload = (T) springMessage.getPayload();
 	}
 
 	/**

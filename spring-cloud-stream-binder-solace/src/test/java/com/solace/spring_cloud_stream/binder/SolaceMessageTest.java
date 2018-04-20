@@ -57,8 +57,11 @@ public class SolaceMessageTest {
 		
 		SolaceMessage<String> sm = new SolaceMessage<String>(springMessage);
 		
-			// we haven't overriden the destination, so toSolace() returns false
-			assertFalse(sm.toSolace());
+		// we haven't overriden the destination, so toSolace() returns false
+		assertFalse(sm.toSolace());
+		
+		assertNotNull(sm.getPayload());
+		assertTrue(payload.equals(sm.getPayload()));
 		
 		String newDestName = "override/the/topic/name";
 		HashMap<String, Object> headerMap = new HashMap<String, Object> ();
