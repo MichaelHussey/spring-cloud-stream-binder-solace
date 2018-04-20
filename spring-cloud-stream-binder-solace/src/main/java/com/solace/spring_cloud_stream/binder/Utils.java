@@ -2,6 +2,9 @@ package com.solace.spring_cloud_stream.binder;
 
 import java.util.HashMap;
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.MessageHeaders;
+import org.springframework.messaging.support.MessageBuilder;
 
 import com.solacesystems.jcsmp.JCSMPErrorResponseException;
 import com.solacesystems.jcsmp.JCSMPException;
@@ -95,4 +98,19 @@ public class Utils {
 		}
 		return inMap;
 	}
+	/**
+	 * 
+	 * @param payload
+	 * @param headerMap
+	 * @return
+	 */
+	public static Message<?> buildSpringMessage(Object payload, HashMap<String, Object> headerMap)
+	{
+		if (headerMap == null)
+			headerMap = new HashMap<String, Object> ();
+		MessageHeaders mh = new MessageHeaders(headerMap);
+		Message<?> springMessage = MessageBuilder.createMessage(payload, mh);
+		return springMessage;
+	}
+
 }
