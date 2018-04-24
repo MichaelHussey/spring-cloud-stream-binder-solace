@@ -89,8 +89,6 @@ SolaceStreamProvisioner> implements ExtendedPropertiesBinder<MessageChannel, Jcs
 
 	private JcsmpExtendedBindingProperties extendedBindingProperties = new JcsmpExtendedBindingProperties();
 
-	//private JCSMPSession session;
-
 	protected JCSMPProperties properties;
 
 	/**
@@ -116,7 +114,7 @@ SolaceStreamProvisioner> implements ExtendedPropertiesBinder<MessageChannel, Jcs
 	 */
 	@Override
 	public void onInit() throws InvalidPropertiesException, JCSMPException {
-		log.info("onInit()");
+		log.info("SolaceBinder.onInit()");
 		properties = new JCSMPProperties();
 		properties.setProperty(JCSMPProperties.HOST, solaceProperties.getSmfHost());
 		properties.setProperty(JCSMPProperties.VPN_NAME, solaceProperties.getMsgVpn());
@@ -179,20 +177,17 @@ SolaceStreamProvisioner> implements ExtendedPropertiesBinder<MessageChannel, Jcs
 	}
 
 	/**
-	 * Right now we can only have a single SolaceMessageChannelAdapter, do we need multiple?
+	 * 
 	 */
 	@Override
 	protected MessageProducer createConsumerEndpoint(ConsumerDestination destination, String group,
 			ExtendedConsumerProperties<JcsmpConsumerProperties> properties) throws Exception {
 
+		Assert.state(!HeaderMode.embeddedHeaders.equals(properties.getHeaderMode()),
+				"the Solace binder does not support embedded headers since Solace supports headers natively");
+
 		messageChannelAdapter = new InputMessageChannelAdapter(group);
 		messageChannelAdapter.doSubscribe(this, destination, properties);
-		/**
-		DirectChannel bridgeToModuleChannel = new DirectChannel();
-		bridgeToModuleChannel.setBeanFactory(this.getBeanFactory());
-		bridgeToModuleChannel.setBeanName(messageChannelAdapter.channelName + ".bridge");
-		messageChannelAdapter.setOutputChannel(bridgeToModuleChannel);
-		 */
 		return messageChannelAdapter;
 	}
 }
