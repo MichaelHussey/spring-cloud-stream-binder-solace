@@ -3,7 +3,8 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<!-- Parent POM which sets the versions of Spring components needed for Solace Binder -->
+	<!-- Parent POM which sets the versions of Spring components needed for 
+		Solace Binder -->
 	<groupId>com.solace.spring-cloud-stream</groupId>
 	<artifactId>spring-cloud-stream-binder-solace-parent</artifactId>
 	<version>0.1</version>
@@ -14,19 +15,14 @@
 		<springframework.boot.version>2.0.0.RELEASE</springframework.boot.version>
 		<spring-cloud-dependencies.version>Elmhurst.RELEASE</spring-cloud-dependencies.version>
 		<junit-version>4.12</junit-version>
-		<!-- 
-		Make sure we use the same version of Jackson as AWS SDK 
-		See https://github.com/aws/aws-sdk-java/blob/master/pom.xml for correct ones to use
-		-->
-        <jackson.version>2.6.7</jackson.version>
-        <jackson.databind.version>2.9.4</jackson.databind.version>
+		<!-- Make sure we use the same version of Jackson as AWS SDK See https://github.com/aws/aws-sdk-java/blob/master/pom.xml 
+			for correct ones to use -->
+		<jackson.version>2.6.7</jackson.version>
+		<jackson.databind.version>2.9.4</jackson.databind.version>
 	</properties>
 	<dependencies>
-<!--  dependency>
-    <groupId>org.springframework</groupId>
-    <artifactId>spring-core</artifactId>
-    <version>5.0.3.RELEASE</version>
-</dependency -->
+		<!-- dependency> <groupId>org.springframework</groupId> <artifactId>spring-core</artifactId> 
+			<version>5.0.3.RELEASE</version> </dependency -->
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-stream</artifactId>
@@ -38,30 +34,22 @@
 			<artifactId>sol-jcsmp</artifactId>
 			<version>10.1.1</version>
 		</dependency>
-    <!-- test dependencies -->
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>${junit-version}</version>
-      <scope>test</scope>
-    </dependency>
+		<!-- test dependencies -->
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>${junit-version}</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
-	
+
 	<modules>
 		<module>spring-cloud-stream-binder-solace</module>
 		<module>spring-cloud-stream-solace-sample</module>
 	</modules>
-	<!--  dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>org.springframework.cloud</groupId>
-				<artifactId>spring-cloud-stream-dependencies</artifactId>
-				<version>${spring-cloud-stream.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-		</dependencies>
-	</dependencyManagement -->
+	<!-- dependencyManagement> <dependencies> <dependency> <groupId>org.springframework.cloud</groupId> 
+		<artifactId>spring-cloud-stream-dependencies</artifactId> <version>${spring-cloud-stream.version}</version> 
+		<type>pom</type> <scope>import</scope> </dependency> </dependencies> </dependencyManagement -->
 
 	<build>
 		<pluginManagement>
@@ -78,6 +66,18 @@
 						<source>1.8</source>
 						<target>1.8</target>
 					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-source-plugin</artifactId>
+					<executions>
+						<execution>
+							<id>attach-sources</id>
+							<goals>
+								<goal>jar</goal>
+							</goals>
+						</execution>
+					</executions>
 				</plugin>
 			</plugins>
 		</pluginManagement>
