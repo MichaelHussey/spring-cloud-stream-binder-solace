@@ -18,17 +18,4 @@ import com.solace.spring_cloud_stream.binder.properties.SolaceConfigurationPrope
 @EnableConfigurationProperties(SolaceConfigurationProperties.class)
 public class SolaceBinderAutoConfiguration {
 
-	//@Bean
-	/*
-	public BinderFactory binderFactory(final Binder<MessageChannel, ?, ?> binder) {
-		return new BinderFactory() {
-			@SuppressWarnings("unchecked")
-			@Override
-			public <T> Binder<T, ? extends ConsumerProperties, ? extends ProducerProperties> getBinder(
-					String configurationName, Class<? extends T> bindableType) {
-				return (Binder<T, ? extends ConsumerProperties, ? extends ProducerProperties>) binder;
-			}
-		};
-	}*/
-	
 }
