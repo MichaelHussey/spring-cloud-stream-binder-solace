@@ -34,7 +34,14 @@ public class SolaceBinderConstants {
 	public static final String FIELD_SEQUENCE_NUMBER = "SequenceNumber";
 
 	public static final String FIELD_DESTINATION_NAME = "DestinationName";
+	public static final String FIELD_DESTINATION_TYPE = "DestinationType";
+
+	public static final String FIELD_DYNAMICDESTINATION_NAME = "DynamicDestinationName";
+	public static final String FIELD_DYNAMICDESTINATION_Type = "DynamicDestinationType";
 
 	public static final String FIELD_REPLYDESTINATION_NAME = "ReplyDestinationName";
-	public static final String FIELD_DYNAMICDESTINATION_NAME = "DynamicDestinationName";
+	public static final String FIELD_REPLYDESTINATION_TYPE = "ReplyDestinationType";
+
+	
+	public static enum DESTINATION_TYPE {QUEUE, TOPIC};
 }
