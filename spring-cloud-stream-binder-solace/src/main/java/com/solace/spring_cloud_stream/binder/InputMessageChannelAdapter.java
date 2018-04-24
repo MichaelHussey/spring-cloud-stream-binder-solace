@@ -1,34 +1,30 @@
 package com.solace.spring_cloud_stream.binder;
 
-import java.util.HashMap;
-import java.util.Iterator;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.DirectFieldAccessor;
 import org.springframework.cloud.stream.binder.ExtendedConsumerProperties;
 import org.springframework.cloud.stream.provisioning.ConsumerDestination;
 import org.springframework.integration.channel.AbstractSubscribableChannel;
 import org.springframework.integration.core.MessageProducer;
+import org.springframework.integration.dispatcher.AbstractDispatcher;
 import org.springframework.integration.dispatcher.BroadcastingDispatcher;
 import org.springframework.integration.dispatcher.MessageDispatcher;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
-import org.springframework.messaging.MessageHeaders;
-import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.messaging.MessageHandler;
 import org.springframework.util.Assert;
 
 import com.solace.spring_cloud_stream.binder.properties.JcsmpConsumerProperties;
 import com.solacesystems.jcsmp.BytesXMLMessage;
-import com.solacesystems.jcsmp.Destination;
 import com.solacesystems.jcsmp.JCSMPException;
 import com.solacesystems.jcsmp.JCSMPFactory;
 import com.solacesystems.jcsmp.JCSMPSession;
-import com.solacesystems.jcsmp.Queue;
-import com.solacesystems.jcsmp.SDTException;
-import com.solacesystems.jcsmp.SDTMap;
 import com.solacesystems.jcsmp.SessionEventArgs;
 import com.solacesystems.jcsmp.SessionEventHandler;
-import com.solacesystems.jcsmp.TextMessage;
+import com.solacesystems.jcsmp.XMLMessage;
 import com.solacesystems.jcsmp.XMLMessageConsumer;
 import com.solacesystems.jcsmp.XMLMessageListener;
 
@@ -38,6 +34,13 @@ import com.solacesystems.jcsmp.XMLMessageListener;
  *
  */
 public class InputMessageChannelAdapter extends AbstractSubscribableChannel implements XMLMessageListener, MessageProducer, SessionEventHandler {
+
+	/**
+	 * @return the session
+	 */
+	public JCSMPSession getSession() {
+		return session;
+	}
 
 	private static final Logger logger = LoggerFactory.getLogger(InputMessageChannelAdapter.class);
 
@@ -94,25 +97,43 @@ public class InputMessageChannelAdapter extends AbstractSubscribableChannel impl
 	 */
 	@Override
 	public void setOutputChannel(MessageChannel _outputChannel) {
+		logger.info("Channel ["+this.channelName+"] setOutputChannel to "+_outputChannel+":"+_outputChannel.getClass().getName());
 		outputChannel = _outputChannel;
 	}
-
-	public void setOutputChannelName(String outputChannelName) {
-		Assert.hasText(outputChannelName, "'outputChannelName' must not be null or empty");
-		this.outputChannelName = outputChannelName;
-	}
+	/**
+		// see if this fixes issue with embedded headers
+        DirectFieldAccessor dfa = new DirectFieldAccessor(outputChannel);
+        AbstractDispatcher dispatcher = (AbstractDispatcher) dfa.getPropertyValue("dispatcher");
+        dfa = new DirectFieldAccessor(dispatcher);
+        @SuppressWarnings("unchecked")
+        Set<MessageHandler> handlers = (Set<MessageHandler>) dfa.getPropertyValue("handlers");
+        // there should be exactly one handler
+        MessageHandler handler = handlers.iterator().next();
+        dfa = new DirectFieldAccessor(handler);
+        dfa.setPropertyValue("embedHeaders", false);
+        logger.warn("Disabled embedHeaders");
+ 		
+	}*/
 
 	@Override
 	public MessageChannel getOutputChannel() {
+		logger.info("Channel ["+this.channelName+"] getOutputChannel: "+this.outputChannel);
+		return this.outputChannel;
+		/**
 		if (this.outputChannelName != null) {
 			synchronized (this) {
 				if (this.outputChannelName != null) {
 					this.outputChannel = getChannelResolver().resolveDestination(this.outputChannelName);
-					this.outputChannelName = null;
+					logger.info("Channel ["+this.channelName+"] resolved OutputChannel: "+outputChannel);
+					if (this.outputChannel != null)
+					{
+						this.outputChannelName = null;
+					}
 				}
 			}
 		}
 		return this.outputChannel;
+		*/
 	}
 
 
@@ -148,61 +169,21 @@ public class InputMessageChannelAdapter extends AbstractSubscribableChannel impl
 	/**
 	 * from {@link XMLMessageListener#onReceive(BytesXMLMessage arg0) XMLMessageListener}
 	 */
+	@SuppressWarnings("rawtypes")
 	@Override
 	public void onReceive(BytesXMLMessage solaceMessage) {
 		if (logger.isInfoEnabled())
-			logger.info("Channel ["+this.channelName+"] received message on "+destination.getName()+" payload size: "+solaceMessage.getContentLength());
+			logger.info("Channel ["+this.channelName+"] received message on "+destination.getName()
+			+" payload size: "+solaceMessage.getContentLength()
+			+"/"+solaceMessage.getAttachmentContentLength()
+			+" type="+solaceMessage.getClass().getName());
 		Message<?> springMessage = null;
-		HashMap<String, Object> headerMap = new HashMap<String, Object>();
-
-		// TODO: set all the standard header properties
-
-		headerMap = Utils.putIfNotNull(headerMap, SolaceBinderConstants.FIELD_APPLICATION_MESSAGE_ID, 
-				solaceMessage.getApplicationMessageId());
-		headerMap = Utils.putIfNotNull(headerMap, SolaceBinderConstants.FIELD_CORRELATION_ID, 
-				solaceMessage.getCorrelationKey());
-		headerMap = Utils.putIfNotNull(headerMap, SolaceBinderConstants.FIELD_APPLICATION_MESSAGE_TYPE, 
-				solaceMessage.getApplicationMessageType());
-		headerMap = Utils.putIfNotNull(headerMap, SolaceBinderConstants.FIELD_SENDERID, 
-				solaceMessage.getSenderId());
-		headerMap = Utils.putIfNotNull(headerMap, SolaceBinderConstants.FIELD_SENDER_TIMESTAMP, 
-				solaceMessage.getSenderTimestamp());
-
-		// Store the topic or queue name on which we received the message
-		Destination dest = solaceMessage.getDestination();
-		String prefix = "T/";
-		if (dest instanceof Queue) {
-			prefix = "Q/";
+		try {
+			springMessage = new SolaceMessage(solaceMessage);
+			outputChannel.send(springMessage);
+		} catch (SolaceBinderException e) {
+			logger.error(e.toString());
 		}
-		headerMap.put(SolaceBinderConstants.FIELD_DESTINATION_NAME, prefix+dest.getName());
-
-		// Map any user properties
-		SDTMap userProperties = solaceMessage.getProperties();
-		if (userProperties != null)
-		{
-			Iterator<String> iter = userProperties.keySet().iterator();
-			while (iter.hasNext())
-			{
-				String key = iter.next();
-				try {
-					headerMap.put(key, userProperties.get(key));
-				} catch (SDTException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-		}
-
-
-		MessageHeaders mh = new MessageHeaders(headerMap);
-		if (solaceMessage instanceof TextMessage)
-		{
-			TextMessage solaceTextMessage = (TextMessage) solaceMessage;
-			springMessage = MessageBuilder.createMessage(solaceTextMessage.getText(), mh);
-		} else {
-			springMessage = MessageBuilder.createMessage(solaceMessage.getBytes(), mh);
-		}
-		outputChannel.send(springMessage);
 	}
 
 	/**
@@ -225,4 +206,48 @@ public class InputMessageChannelAdapter extends AbstractSubscribableChannel impl
 			}
 		}
 	}
+	/** 
+	 * from {@link AbstractSubscribableChannel}
+	 *
+	@Override
+	protected boolean doSend(Message<?> message, long timeout) {
+		logger.info("doSend:timeout="+timeout+" invoked for "+message);		
+		return super.doSend(message, timeout);
+	}
+	**
+	 * This method is called if 
+	 *
+	@Override
+	public boolean send(Message<?> message, long timeout) {
+		boolean retVal = true;
+		logger.info("send:timeout="+timeout+" invoked for "+message);
+		
+		if (outputChannel instanceof OutputMessageChannelAdapter) {
+			OutputMessageChannelAdapter solaceOutput = (OutputMessageChannelAdapter) outputChannel;
+			@SuppressWarnings("unchecked")
+			SolaceMessage<?> sMessage = new SolaceMessage(message);
+			try {
+				boolean hasOverrides = sMessage.toSolace();
+				XMLMessage solaceMessage = sMessage.getSolaceMessage();
+				
+				solaceOutput.handleMessage(message);
+				
+			} catch (SolaceBinderException e) {
+				retVal = false;
+				logger.warn("Couldn't send reply:"+e.toString());
+			}
+		}
+		else
+		{
+			if (outputChannel == null) {
+				logger.error("Channel ["+this.channelName+"] Can't send reply as outputChannel is null");
+			}
+			else
+			{
+				logger.warn("Channel ["+this.channelName+"] outputChannel is a "+outputChannel.getClass()+" "+outputChannel);
+			}
+		}
+		return retVal;
+	}*/
+
 }

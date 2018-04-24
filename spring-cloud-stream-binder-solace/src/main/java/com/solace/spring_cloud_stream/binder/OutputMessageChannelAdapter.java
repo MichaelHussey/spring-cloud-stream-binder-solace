@@ -9,11 +9,10 @@ import org.springframework.integration.endpoint.MessageProducerSupport;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
-import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.MessagingException;
 
 import com.solace.spring_cloud_stream.binder.properties.JcsmpProducerProperties;
-import com.solacesystems.jcsmp.BytesXMLMessage;
+import com.solacesystems.jcsmp.Destination;
 import com.solacesystems.jcsmp.InvalidPropertiesException;
 import com.solacesystems.jcsmp.JCSMPException;
 import com.solacesystems.jcsmp.JCSMPFactory;
@@ -32,13 +31,13 @@ public class OutputMessageChannelAdapter extends MessageProducerSupport implemen
 	protected JCSMPSession session;
 
 	//protected String channelName;
-	
+
 	protected XMLMessageProducer producer;
-	
+
 	protected SolaceProducerDestination destination;
 
 	private String name;
-	
+
 	@Override
 	protected void doStart() {
 		super.doStart();
@@ -52,10 +51,14 @@ public class OutputMessageChannelAdapter extends MessageProducerSupport implemen
 			session = JCSMPFactory.onlyInstance().createSession(binder.getProperties(), binder.getContext(), this);
 			session.connect();		
 			logger.info("Connection to Solace Message Router succeeded!");
-			
+
 			if (_destination instanceof SolaceProducerDestination)
 			{
 				destination = (SolaceProducerDestination) _destination;
+			}
+			else
+			{
+				logger.info("ProducerDestination is actually a "+_destination.getClass().getName());
 			}
 
 			producer = session.getMessageProducer(this);
@@ -66,39 +69,51 @@ public class OutputMessageChannelAdapter extends MessageProducerSupport implemen
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		//TODO: complete impl
 	}
-		
+	
 	/**
 	 * from {@link MessageHandler} 
 	 * @param message
 	 * @throws MessagingException
 	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	public void handleMessage(Message<?> message) throws MessagingException {
 		logger.info("Processing message: "+message);
-		XMLMessage solaceMessage = JCSMPFactory.onlyInstance().createMessage(BytesXMLMessage.class);
+
+		SolaceMessage<?> solaceSpringMessage;
+		if (message instanceof SolaceMessage) {
+			logger.debug("Message is already a SolaceMessage");
+			solaceSpringMessage = (SolaceMessage) message;
+		}
+		else
+		{
+			logger.debug("Converting to a SolaceMessage");
+			solaceSpringMessage = new SolaceMessage(message);
+		}
+		boolean hasOverrides = false;
 		try {
-			MessageHeaders headers = message.getHeaders();
-			if (headers.containsKey(SolaceBinderConstants.FIELD_CORRELATION_ID)) {
-				solaceMessage.setCorrelationId((String) headers.get(SolaceBinderConstants.FIELD_CORRELATION_ID));
-			}
-			Object payloadObject = message.getPayload();
-			byte[] payloadBytes = null;
-			if (payloadObject instanceof byte[])
+			hasOverrides = solaceSpringMessage.toSolace();
+
+			XMLMessage solaceMessage = solaceSpringMessage.getSolaceMessage();
+
+			// Handle dynamic destinations (eg replyTo cases)
+			Destination solaceDestination = destination.getTopic();
+			if (hasOverrides)
 			{
-				payloadBytes = (byte[]) payloadObject;
+				solaceDestination = solaceSpringMessage.getSolaceDestination(destination);
 			}
-			else
-			{
-				logger.warn("Can't handle payload of type ["+payloadObject.getClass().getName()+"]");
+			if (producer != null) {
+				producer.send(solaceMessage, solaceDestination);
+			} else {
+				logger.warn("No producer has been provided, message not sent to Solace");
 			}
-			solaceMessage.writeAttachment(payloadBytes);
-			producer.send(solaceMessage , destination.getTopic());
-			logger.info("Sent message to destination ["+destination.getName()+"]");
+		} catch (SolaceBinderException e) {
+			// TODO Auto-generated catch block
+			throw new MessagingException("Error converting Spring message to Solace", e);
 		} catch (JCSMPException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new MessagingException("Error sending message to Solace", e);
 		}
 	}
 	/**
@@ -121,7 +136,7 @@ public class OutputMessageChannelAdapter extends MessageProducerSupport implemen
 			}
 		}
 	}
-	
+
 
 	/**
 	 * from {@link JCSMPStreamingPublishEventHandler}
@@ -129,7 +144,7 @@ public class OutputMessageChannelAdapter extends MessageProducerSupport implemen
 	@Override
 	public void handleError(String arg0, JCSMPException arg1, long arg2) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	/**
@@ -138,9 +153,9 @@ public class OutputMessageChannelAdapter extends MessageProducerSupport implemen
 	@Override
 	public void responseReceived(String arg0) {
 		// TODO Auto-generated method stub
-		
+
 	}
-	
+
 	@Override
 	public String toString() {
 		return "OutputMessageChannelAdapter{" +
@@ -154,4 +169,7 @@ public class OutputMessageChannelAdapter extends MessageProducerSupport implemen
 
 	}
 
+	public void setDestination(SolaceProducerDestination destination2) {
+		destination = destination2;
+	}
 }
