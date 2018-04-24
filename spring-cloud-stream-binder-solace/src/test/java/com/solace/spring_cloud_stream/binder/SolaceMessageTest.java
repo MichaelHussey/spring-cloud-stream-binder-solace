@@ -149,4 +149,13 @@ public class SolaceMessageTest {
 		Payload deserializedPayload = (Payload) payloadObject;
 		assertTrue(deserializedPayload.equals(payload));
 	}
+	
+	@Test
+	public void testToString() {
+		String payload = "Just a payload";
+		SolaceMessage<String> sm = new SolaceMessage<String>(payload, null);
+		
+		String sm2string = sm.toString();
+		assertNotNull(sm2string);
+	}
 }
