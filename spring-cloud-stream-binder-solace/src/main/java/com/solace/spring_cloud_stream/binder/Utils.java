@@ -112,5 +112,29 @@ public class Utils {
 		Message<?> springMessage = MessageBuilder.createMessage(payload, mh);
 		return springMessage;
 	}
+	
+	/**
+	 * Creates a SolaceMessage which can be sent as a reply to the passed Message
+	 * Copies the received MessageId to the CorrelationId field in the reply message
+	 * 
+	 * @param inMessage
+	 * @return
+	 */
+	public static SolaceMessage<?> createReplyMessage(Message<?> inMessage, Object payload, HashMap<String, Object> headerMap)
+	{
+
+		String correlationId = (String) inMessage.getHeaders().get(SolaceBinderConstants.FIELD_APPLICATION_MESSAGE_ID);
+		if (headerMap == null)
+		{
+			headerMap = new HashMap<String, Object>();
+		}
+		headerMap.put(SolaceBinderConstants.FIELD_CORRELATION_ID, correlationId);
+		MessageHeaders mh = new MessageHeaders(headerMap);
+		
+		@SuppressWarnings("rawtypes")
+		SolaceMessage<?> springMessage = new SolaceMessage(payload, mh);
+		return springMessage;
+	}
+	
 
 }
