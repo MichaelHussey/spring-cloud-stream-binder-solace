@@ -105,9 +105,9 @@ public class SolaceMessage<T> implements Message<T>, Serializable {
 								2,
 								tMessage.getAttachmentContentLength()-3, charSet);
 					} else {
-					    final byte[] b = new byte[aBB.remaining()];
-					    aBB.duplicate().get(b);
-					    payload = (T) new String(b, charSet);
+						final byte[] b = new byte[aBB.remaining()];
+						aBB.duplicate().get(b);
+						payload = (T) new String(b, charSet);
 					}
 				} catch (UnsupportedEncodingException e) {
 					throw new SolaceBinderException("Error creating String payload from message attachment", e);
@@ -154,57 +154,60 @@ public class SolaceMessage<T> implements Message<T>, Serializable {
 	protected HashMap<String, Object> mapSolaceHeaders(XMLMessage solaceWireMessage) {
 		HashMap<String, Object> headerMap = new HashMap<String, Object>();
 
-		// TODO: set all the standard header properties
+		if (solaceWireMessage != null) {
+			// TODO: set all the standard header properties
 
-		headerMap = Utils.putIfNotNull(headerMap, SolaceBinderConstants.FIELD_APPLICATION_MESSAGE_ID, 
-				solaceMessage.getApplicationMessageId());
-		headerMap = Utils.putIfNotNull(headerMap, SolaceBinderConstants.FIELD_CORRELATION_ID, 
-				solaceMessage.getCorrelationKey());
-		headerMap = Utils.putIfNotNull(headerMap, SolaceBinderConstants.FIELD_APPLICATION_MESSAGE_TYPE, 
-				solaceMessage.getApplicationMessageType());
-		headerMap = Utils.putIfNotNull(headerMap, SolaceBinderConstants.FIELD_SENDERID, 
-				solaceMessage.getSenderId());
-		headerMap = Utils.putIfNotNull(headerMap, SolaceBinderConstants.FIELD_SENDER_TIMESTAMP, 
-				solaceMessage.getSenderTimestamp());
+			headerMap = Utils.putIfNotNull(headerMap, SolaceBinderConstants.FIELD_APPLICATION_MESSAGE_ID, 
+					solaceMessage.getApplicationMessageId());
+			headerMap = Utils.putIfNotNull(headerMap, SolaceBinderConstants.FIELD_CORRELATION_ID, 
+					solaceMessage.getCorrelationKey());
+			headerMap = Utils.putIfNotNull(headerMap, SolaceBinderConstants.FIELD_APPLICATION_MESSAGE_TYPE, 
+					solaceMessage.getApplicationMessageType());
+			headerMap = Utils.putIfNotNull(headerMap, SolaceBinderConstants.FIELD_SENDERID, 
+					solaceMessage.getSenderId());
+			headerMap = Utils.putIfNotNull(headerMap, SolaceBinderConstants.FIELD_SENDER_TIMESTAMP, 
+					solaceMessage.getSenderTimestamp());
 
-		// Store the topic or queue name on which we received the message
-		Destination dest = solaceMessage.getDestination();
-		if (dest != null) {
-			if (dest instanceof Queue) {
-				headerMap.put(SolaceBinderConstants.FIELD_DESTINATION_TYPE, SolaceBinderConstants.DESTINATION_TYPE.QUEUE);
-			} else {
-				headerMap.put(SolaceBinderConstants.FIELD_DESTINATION_TYPE, SolaceBinderConstants.DESTINATION_TYPE.TOPIC);				
+			// Store the topic or queue name on which we received the message
+			Destination dest = solaceMessage.getDestination();
+			if (dest != null) {
+				if (dest instanceof Queue) {
+					headerMap.put(SolaceBinderConstants.FIELD_DESTINATION_TYPE, SolaceBinderConstants.DESTINATION_TYPE.QUEUE);
+				} else {
+					headerMap.put(SolaceBinderConstants.FIELD_DESTINATION_TYPE, SolaceBinderConstants.DESTINATION_TYPE.TOPIC);				
+				}
+				headerMap.put(SolaceBinderConstants.FIELD_DESTINATION_NAME, dest.getName());
 			}
-			headerMap.put(SolaceBinderConstants.FIELD_DESTINATION_NAME, dest.getName());
-		}
 
-		Destination reply_dest = solaceMessage.getReplyTo();
-		if (reply_dest != null) {
-			if (reply_dest instanceof Queue) {
-				headerMap.put(SolaceBinderConstants.FIELD_REPLYDESTINATION_TYPE, SolaceBinderConstants.DESTINATION_TYPE.QUEUE);
+			Destination reply_dest = solaceMessage.getReplyTo();
+			if (reply_dest != null) {
+				if (reply_dest instanceof Queue) {
+					headerMap.put(SolaceBinderConstants.FIELD_REPLYDESTINATION_TYPE, SolaceBinderConstants.DESTINATION_TYPE.QUEUE);
+				}
+				else
+				{
+					headerMap.put(SolaceBinderConstants.FIELD_REPLYDESTINATION_TYPE, SolaceBinderConstants.DESTINATION_TYPE.TOPIC);
+				}
+				headerMap.put(SolaceBinderConstants.FIELD_REPLYDESTINATION_NAME, reply_dest.getName());
 			}
-			else
+
+			// Map any user properties
+			SDTMap userProperties = solaceMessage.getProperties();
+			if (userProperties != null)
 			{
-				headerMap.put(SolaceBinderConstants.FIELD_REPLYDESTINATION_TYPE, SolaceBinderConstants.DESTINATION_TYPE.TOPIC);
-			}
-			headerMap.put(SolaceBinderConstants.FIELD_REPLYDESTINATION_NAME, reply_dest.getName());
-		}
-
-		// Map any user properties
-		SDTMap userProperties = solaceMessage.getProperties();
-		if (userProperties != null)
-		{
-			Iterator<String> iter = userProperties.keySet().iterator();
-			while (iter.hasNext())
-			{
-				String key = iter.next();
-				try {
-					headerMap.put(key, userProperties.get(key));
-				} catch (SDTException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+				Iterator<String> iter = userProperties.keySet().iterator();
+				while (iter.hasNext())
+				{
+					String key = iter.next();
+					try {
+						headerMap.put(key, userProperties.get(key));
+					} catch (SDTException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 			}
+
 		}
 		return headerMap;
 	}
@@ -219,6 +222,16 @@ public class SolaceMessage<T> implements Message<T>, Serializable {
 		this.direction = MappingDirection.SPRING2SOLACE;
 		this.springHeaders = springMessage.getHeaders();
 		this.payload = (T) springMessage.getPayload();
+	}
+	/**
+	 * 
+	 * @param springMessage
+	 */
+	@SuppressWarnings("unchecked")
+	public SolaceMessage(Object payload, MessageHeaders headers) {
+		this.direction = MappingDirection.SPRING2SOLACE;
+		this.springHeaders = headers;
+		this.payload = (T) payload;
 	}
 
 	/**
@@ -284,7 +297,7 @@ public class SolaceMessage<T> implements Message<T>, Serializable {
 		if (springHeaders.containsKey(SolaceBinderConstants.FIELD_CORRELATION_ID)) {
 			solaceMessage.setCorrelationId((String) springHeaders.get(SolaceBinderConstants.FIELD_CORRELATION_ID));
 		}
-		
+
 		// Handle dynamic destinations (eg replyTo cases)
 		if (springHeaders.containsKey(SolaceBinderConstants.FIELD_DYNAMICDESTINATION_NAME)) {
 			toDestinationName = (String) springHeaders.get(SolaceBinderConstants.FIELD_DYNAMICDESTINATION_NAME);
@@ -317,7 +330,7 @@ public class SolaceMessage<T> implements Message<T>, Serializable {
 		{
 			if (this.direction == MappingDirection.SOLACE2SPRING && solaceMessage != null) {
 				// TODO: Extract the payload from the solaceMessage
-		
+
 			}
 		}
 		return payload;
@@ -331,7 +344,7 @@ public class SolaceMessage<T> implements Message<T>, Serializable {
 	public MappingDirection getDirection() {
 		return direction;
 	}	
-	
+
 	public String toString() {
 		StringBuilder sb = new StringBuilder(getClass().getSimpleName());
 		sb.append(" [payload=");
@@ -345,6 +358,6 @@ public class SolaceMessage<T> implements Message<T>, Serializable {
 		sb.append(", solaceHeaders=").append(mapSolaceHeaders(this.solaceMessage));
 		sb.append("]");
 		return sb.toString();
-		
+
 	}
 }
