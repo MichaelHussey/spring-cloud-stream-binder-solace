@@ -43,8 +43,10 @@ public class SolaceMessageTest {
 		// Now convert to SolaceMessage
 		SolaceMessage<String> sm = new SolaceMessage<String>(solaceMessage);
 		
-		String convertedPaylod = sm.getPayload();
-		assertTrue(convertedPaylod.equals(payload));
+		String convertedPayload = sm.getPayload();
+		System.err.println("Converted payload ["+convertedPayload+"] length="+convertedPayload.length());
+		System.err.println("Original  payload ["+payload+"] length="+payload.length());
+		assertTrue(convertedPayload.equals(payload));
 	}
 	/**
 	 * Handling of String payloads when mapping Spring -> Solace
@@ -65,7 +67,7 @@ public class SolaceMessageTest {
 		
 		String newDestName = "override/the/topic/name";
 		HashMap<String, Object> headerMap = new HashMap<String, Object> ();
-		headerMap.put(SolaceBinderConstants.FIELD_DESTINATION, newDestName);
+		headerMap.put(SolaceBinderConstants.FIELD_DYNAMICDESTINATION_NAME, newDestName);
 		springMessage = Utils.buildSpringMessage(payload, headerMap);
 		sm = new SolaceMessage<String>(springMessage);
 		assertTrue(sm.toSolace());
@@ -94,7 +96,7 @@ public class SolaceMessageTest {
 		
 		String newDestName = "override/the/topic/name";
 		HashMap<String, Object> headerMap = new HashMap<String, Object> ();
-		headerMap.put(SolaceBinderConstants.FIELD_DESTINATION, newDestName);
+		headerMap.put(SolaceBinderConstants.FIELD_DYNAMICDESTINATION_NAME, newDestName);
 		springMessage = Utils.buildSpringMessage(payloadMap, headerMap);
 		sm = new SolaceMessage<String>(springMessage);
 
@@ -127,7 +129,7 @@ public class SolaceMessageTest {
 		
 		String newDestName = "override/the/topic/name";
 		HashMap<String, Object> headerMap = new HashMap<String, Object> ();
-		headerMap.put(SolaceBinderConstants.FIELD_DESTINATION, newDestName);
+		headerMap.put(SolaceBinderConstants.FIELD_DYNAMICDESTINATION_NAME, newDestName);
 		springMessage = Utils.buildSpringMessage(payload, headerMap);
 		sm = new SolaceMessage<String>(springMessage);
 

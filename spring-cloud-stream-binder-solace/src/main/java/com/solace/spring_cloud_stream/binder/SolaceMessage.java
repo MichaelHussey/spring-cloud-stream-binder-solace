@@ -7,10 +7,14 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.support.MessageBuilder;
@@ -24,8 +28,6 @@ import com.solacesystems.jcsmp.SDTException;
 import com.solacesystems.jcsmp.SDTMap;
 import com.solacesystems.jcsmp.TextMessage;
 import com.solacesystems.jcsmp.XMLMessage;
-
-import ch.qos.logback.classic.Logger;
 
 /**
  * Wrapper around a received Solace message which maps it to a Spring Message and vice versa
@@ -44,6 +46,7 @@ import ch.qos.logback.classic.Logger;
  */
 public class SolaceMessage<T> implements Message<T>, Serializable {
 
+	private static final Logger logger = LoggerFactory.getLogger(SolaceMessage.class);
 	/**
 	 * 
 	 */
@@ -88,7 +91,31 @@ public class SolaceMessage<T> implements Message<T>, Serializable {
 		// Map the content
 		if (originalMessage instanceof TextMessage) {
 			TextMessage tMessage = (TextMessage) originalMessage;
-			payload = (T) tMessage.getText();
+			if (tMessage.getContentLength() > 0) {
+				payload = (T) tMessage.getText();
+			} else if (tMessage.getAttachmentContentLength() > 0) {
+				// TODO read character-encodig from a message header or provide via configuration
+				String contentType = tMessage.getHTTPContentType();
+				logger.info("TextMessage, content-type: "+contentType);
+				String charSet = "UTF-8";
+				try {
+					ByteBuffer aBB = tMessage.getAttachmentByteBuffer();
+					if (aBB.hasArray()) {
+						payload = (T) new String(aBB.array(),
+								2,
+								tMessage.getAttachmentContentLength()-3, charSet);
+					} else {
+					    final byte[] b = new byte[aBB.remaining()];
+					    aBB.duplicate().get(b);
+					    payload = (T) new String(b, charSet);
+					}
+				} catch (UnsupportedEncodingException e) {
+					throw new SolaceBinderException("Error creating String payload from message attachment", e);
+				}
+			} else {
+				// null payload
+				payload = null;
+			}
 		} else if (originalMessage instanceof MapMessage) {
 			SDTMap solaceMap = ((MapMessage) originalMessage).getMap();
 			try {
@@ -143,20 +170,24 @@ public class SolaceMessage<T> implements Message<T>, Serializable {
 		// Store the topic or queue name on which we received the message
 		Destination dest = solaceMessage.getDestination();
 		if (dest != null) {
-			String prefix = "T/";
 			if (dest instanceof Queue) {
-				prefix = "Q/";
+				headerMap.put(SolaceBinderConstants.FIELD_DESTINATION_TYPE, SolaceBinderConstants.DESTINATION_TYPE.QUEUE);
+			} else {
+				headerMap.put(SolaceBinderConstants.FIELD_DESTINATION_TYPE, SolaceBinderConstants.DESTINATION_TYPE.TOPIC);				
 			}
-			headerMap.put(SolaceBinderConstants.FIELD_DESTINATION_NAME, prefix+dest.getName());
+			headerMap.put(SolaceBinderConstants.FIELD_DESTINATION_NAME, dest.getName());
 		}
 
 		Destination reply_dest = solaceMessage.getReplyTo();
 		if (reply_dest != null) {
-			String prefix = "T/";
 			if (reply_dest instanceof Queue) {
-				prefix = "Q/";
+				headerMap.put(SolaceBinderConstants.FIELD_REPLYDESTINATION_TYPE, SolaceBinderConstants.DESTINATION_TYPE.QUEUE);
 			}
-			headerMap.put(SolaceBinderConstants.FIELD_REPLYDESTINATION_NAME, prefix+reply_dest.getName());
+			else
+			{
+				headerMap.put(SolaceBinderConstants.FIELD_REPLYDESTINATION_TYPE, SolaceBinderConstants.DESTINATION_TYPE.TOPIC);
+			}
+			headerMap.put(SolaceBinderConstants.FIELD_REPLYDESTINATION_NAME, reply_dest.getName());
 		}
 
 		// Map any user properties
@@ -200,9 +231,6 @@ public class SolaceMessage<T> implements Message<T>, Serializable {
 	{
 		boolean retVal = false;
 
-		if (springHeaders.containsKey(SolaceBinderConstants.FIELD_CORRELATION_ID)) {
-			solaceMessage.setCorrelationId((String) springHeaders.get(SolaceBinderConstants.FIELD_CORRELATION_ID));
-		}
 		Object payloadObject = springMessage.getPayload();
 		if (payloadObject instanceof byte[])
 		{
@@ -252,9 +280,14 @@ public class SolaceMessage<T> implements Message<T>, Serializable {
 			throw new SolaceBinderException("Can't handle payload of type ["+payloadObject.getClass().getName()+"]");
 		}
 
+		// TODO - map other relevant outbound headers...
+		if (springHeaders.containsKey(SolaceBinderConstants.FIELD_CORRELATION_ID)) {
+			solaceMessage.setCorrelationId((String) springHeaders.get(SolaceBinderConstants.FIELD_CORRELATION_ID));
+		}
+		
 		// Handle dynamic destinations (eg replyTo cases)
-		if (springHeaders.containsKey(SolaceBinderConstants.FIELD_DESTINATION)) {
-			toDestinationName = (String) springHeaders.get(SolaceBinderConstants.FIELD_DESTINATION);
+		if (springHeaders.containsKey(SolaceBinderConstants.FIELD_DYNAMICDESTINATION_NAME)) {
+			toDestinationName = (String) springHeaders.get(SolaceBinderConstants.FIELD_DYNAMICDESTINATION_NAME);
 			retVal = true;
 		}
 		return retVal;
@@ -298,4 +331,20 @@ public class SolaceMessage<T> implements Message<T>, Serializable {
 	public MappingDirection getDirection() {
 		return direction;
 	}	
+	
+	public String toString() {
+		StringBuilder sb = new StringBuilder(getClass().getSimpleName());
+		sb.append(" [payload=");
+		if (this.payload instanceof byte[]) {
+			sb.append("byte[").append(((byte[]) this.payload).length).append("]");
+		}
+		else {
+			sb.append(this.payload);
+		}
+		sb.append(", springHeaders=").append(this.springHeaders);
+		sb.append(", solaceHeaders=").append(mapSolaceHeaders(this.solaceMessage));
+		sb.append("]");
+		return sb.toString();
+		
+	}
 }
