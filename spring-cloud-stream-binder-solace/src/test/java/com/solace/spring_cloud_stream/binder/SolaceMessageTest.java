@@ -39,6 +39,8 @@ public class SolaceMessageTest {
 		String payload = "Just some string data";
 		TextMessage solaceMessage = JCSMPFactory.onlyInstance().createMessage(TextMessage.class);
 		solaceMessage.setText(payload);
+		String retrievePayload = solaceMessage.getText();
+		assertTrue(retrievePayload.equals(payload));
 		
 		// Now convert to SolaceMessage
 		SolaceMessage<String> sm = new SolaceMessage<String>(solaceMessage);
@@ -47,6 +49,33 @@ public class SolaceMessageTest {
 		System.err.println("Converted payload ["+convertedPayload+"] length="+convertedPayload.length());
 		System.err.println("Original  payload ["+payload+"] length="+payload.length());
 		assertTrue(convertedPayload.equals(payload));
+	}
+	/**
+	 * Handling of Byte payloads when mapping Byte -> Solace
+	 * @throws SolaceBinderException
+	 */
+	@Test
+	public void testSolace2Spring_Byte() throws SolaceBinderException {
+		String appId = "AppId";
+		String payload = "Just some string data";
+		BytesXMLMessage solaceMessage = JCSMPFactory.onlyInstance().createMessage(BytesXMLMessage.class);
+		solaceMessage.setApplicationMessageId(appId);
+
+		// Handle empty payloads
+		// Now convert to SolaceMessage
+		SolaceMessage<Byte[]> sm = new SolaceMessage<Byte[]>(solaceMessage);
+		String newAppId = (String) sm.getHeaders().get(SolaceBinderConstants.FIELD_APPLICATION_MESSAGE_ID);
+		assertTrue(newAppId.equals(appId));
+		
+		solaceMessage.writeAttachment(payload.getBytes());
+		
+		SolaceMessage<byte[]> sm1 = new SolaceMessage<byte[]>(solaceMessage);
+		byte[] convertedPayload = sm1.getPayload();
+		System.err.println("Converted payload ["+convertedPayload+"] length="+convertedPayload.length);
+		System.err.println("Original  payload ["+payload+"] length="+payload.length());
+		assertEquals(convertedPayload.length, payload.length());
+		String convertedString = new String(convertedPayload);
+		assertTrue(convertedString.equals(payload));
 	}
 	/**
 	 * Handling of String payloads when mapping Spring -> Solace

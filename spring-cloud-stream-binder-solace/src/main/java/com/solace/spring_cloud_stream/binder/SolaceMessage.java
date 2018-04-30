@@ -91,31 +91,7 @@ public class SolaceMessage<T> implements Message<T>, Serializable {
 		// Map the content
 		if (originalMessage instanceof TextMessage) {
 			TextMessage tMessage = (TextMessage) originalMessage;
-			if (tMessage.getContentLength() > 0) {
-				payload = (T) tMessage.getText();
-			} else if (tMessage.getAttachmentContentLength() > 0) {
-				// TODO read character-encodig from a message header or provide via configuration
-				String contentType = tMessage.getHTTPContentType();
-				logger.info("TextMessage, content-type: "+contentType);
-				String charSet = "UTF-8";
-				try {
-					ByteBuffer aBB = tMessage.getAttachmentByteBuffer();
-					if (aBB.hasArray()) {
-						payload = (T) new String(aBB.array(),
-								2,
-								tMessage.getAttachmentContentLength()-3, charSet);
-					} else {
-						final byte[] b = new byte[aBB.remaining()];
-						aBB.duplicate().get(b);
-						payload = (T) new String(b, charSet);
-					}
-				} catch (UnsupportedEncodingException e) {
-					throw new SolaceBinderException("Error creating String payload from message attachment", e);
-				}
-			} else {
-				// null payload
-				payload = null;
-			}
+			payload = (T) tMessage.getText();
 		} else if (originalMessage instanceof MapMessage) {
 			SDTMap solaceMap = ((MapMessage) originalMessage).getMap();
 			try {
@@ -123,6 +99,22 @@ public class SolaceMessage<T> implements Message<T>, Serializable {
 			} catch (SDTException e) {
 				throw new SolaceBinderException("Error mapping Solace headers", e);
 			}
+		} else if (originalMessage instanceof BytesXMLMessage) {
+			BytesXMLMessage bytesMessage = (BytesXMLMessage) originalMessage;
+			if (bytesMessage.hasContent())
+			{
+				byte[] contentBytes = new byte[bytesMessage.getContentLength()];
+				bytesMessage.readContentBytes(contentBytes);
+				payload = (T) contentBytes;
+			} else if (bytesMessage.hasAttachment()) {
+				ByteBuffer buffer = bytesMessage.getAttachmentByteBuffer();
+				payload = (T) buffer.array();
+			} else {
+				payload = (T) "NULL";
+			}
+		} else {
+			String message = "Unsupported Solace message type "+originalMessage.getClass().getName();
+			throw new SolaceBinderException(message);
 		}
 		this.springMessage = MessageBuilder.createMessage(payload, this.springHeaders);
 	}
