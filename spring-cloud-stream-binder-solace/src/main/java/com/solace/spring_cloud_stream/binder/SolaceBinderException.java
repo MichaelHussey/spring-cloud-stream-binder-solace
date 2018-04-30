@@ -30,8 +30,13 @@ public class SolaceBinderException extends Exception {
 		StringBuilder sb = new StringBuilder("{\"SolaceBinderException\": {\"message\":");
 		sb.append(this.getMessage());
 		sb.append(", \"stacktrace\":\"");
-		sb.append(ExceptionUtils.getStackTrace(this));
-		sb.append("}}");
+		if (this.getCause() != null)
+		{
+			sb.append(ExceptionUtils.getStackTrace(this.getCause()));
+		} else {
+			sb.append("none");
+		}
+		sb.append("\"}}");
 		return sb.toString();
 	}
 
