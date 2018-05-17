@@ -12,7 +12,7 @@
 
 	<properties>
 		<spring-cloud-stream.version>2.0.0.RELEASE</spring-cloud-stream.version>
-		<springframework.boot.version>2.0.0.RELEASE</springframework.boot.version>
+		<springframework.boot.version>2.0.1.RELEASE</springframework.boot.version>
 		<spring-cloud-dependencies.version>Elmhurst.RELEASE</spring-cloud-dependencies.version>
 		<junit-version>4.12</junit-version>
 		<!-- Make sure we use the same version of Jackson as AWS SDK See https://github.com/aws/aws-sdk-java/blob/master/pom.xml 
